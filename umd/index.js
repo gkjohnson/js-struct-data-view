@@ -10,6 +10,20 @@
 
     class StructMember { }
 
+    class ScalarMember extends StructMember {
+
+        constructor(name, type, littleEndian = false) {
+
+            super();
+
+            this.name = name;
+            this.type = type.toLowerCase();
+            this.littleEndian = littleEndian;
+
+        }
+
+    }
+
     class ArrayMember extends StructMember {
 
         constructor(name, type, littleEndian = false) {
@@ -31,6 +45,29 @@
         writeLength(dataView, readCursor, value) {
 
             return 0;
+
+        }
+
+    }
+
+    class FixedLengthArrayMember extends ArrayMember {
+
+        constructor(name, type, length = 0, littleEndian = false) {
+
+            super(name, type, littleEndian);
+            this.length = length;
+
+        }
+
+        getLength(dataView, readCursor) {
+
+            return this.length;
+
+        }
+
+        writeLength(dataView, readCursor, value) {
+
+            return this.length;
 
         }
 
@@ -94,17 +131,21 @@
             const member = definition[ i ];
             const { name, type, littleEndian } = member;
 
-            // If the type is another struct
+            // nested structs
             if (Array.isArray(type)) {
 
                 // If it's an array type
                 if (member instanceof ArrayMember) {
 
                     const length = member.getLength(dataView, cursor);
+
+                    if (!Array.isArray(target[name])) target[name] = [];
                     const arr = target[name] || [];
+                    arr.length = length;
+
                     for (let j = 0; j < length; j++) {
 
-                        if (arr.length <= j) arr[j].push({});
+                        arr[j] = arr[j] || {};
                         getStruct(dataView, type, cursor.offset, arr[j]);
 
                     }
@@ -125,11 +166,14 @@
                 if (member instanceof ArrayMember) {
 
                     const length = member.getLength(dataView, cursor);
-                    const arr = target[name] || new Array(length);
-                    if (arr.length !== length) arr.length = length;
+
+                    if (!Array.isArray(target[name])) target[name] = [];
+                    const arr = target[name];
+                    arr.length = length;
+
                     for (let j = 0; j < length; j++) {
 
-                        target[name] = dataView[readFunc](cursor.offset, littleEndian);
+                        arr[j] = dataView[readFunc](cursor.offset, littleEndian);
                         cursor.offset += byteLength;
 
                     }
@@ -145,6 +189,8 @@
 
         }
 
+        return target;
+
     }
 
     // Writes a struct into the buffer based on the struct definition and value
@@ -157,9 +203,10 @@
             const { name, type, littleEndian } = member;
             const memberVal = value[name];
 
-            if (type instanceof StructDefinition) {
+            // nested structs
+            if (Array.isArray(type)) {
 
-                if (length > 1) {
+                if (member instanceof ArrayMember) {
 
                     const length = member.writeLength(dataView, cursor, memberVal);
                     for (let j = 0; j < length; j++) {
@@ -179,12 +226,12 @@
                 const byteLength = BYTE_LENGTHS[type];
                 const writeFunc = WRITE_FUNCTIONS[type];
 
-                if (length > 1) {
+                if (member instanceof ArrayMember) {
 
                     const length = member.writeLength(dataView, cursor, memberVal);
                     for (let j = 0; j < length; j++) {
 
-                        dataView[writeFunc](cursor.offset, memberVal[i] || 0, littleEndian);
+                        dataView[writeFunc](cursor.offset, memberVal[j] || 0, littleEndian);
                         cursor.offset += byteLength;
 
                     }
@@ -211,11 +258,11 @@
 
             const member = definition[ i ];
             const type = member.type;
-            const length = member.getLength(dataView, cursor);
 
-            if (type instanceof StructDefinition) {
+            if (Array.isArray(type)) {
 
-                if (length > 1) {
+                if (member instanceof ArrayMember) {
+                    const length = member.getLength(dataView, cursor);
 
                     for (let j = 0; j < length; j++) {
 
@@ -232,7 +279,16 @@
             } else {
 
                 const byteLength = BYTE_LENGTHS[type];
-                cursor.offset += byteLength * length;
+                if (member instanceof ArrayMember) {
+
+                    const length = member.getLength(dataView, cursor);
+                    cursor.offset += byteLength * length;
+
+                } else {
+
+                    cursor.offset += byteLength;
+
+                }
 
             }
 
@@ -245,6 +301,11 @@
     exports.getStruct = getStruct;
     exports.setStruct = setStruct;
     exports.nextStruct = nextStruct;
+    exports.StructDefinition = StructDefinition;
+    exports.StructMember = StructMember;
+    exports.ScalarMember = ScalarMember;
+    exports.ArrayMember = ArrayMember;
+    exports.FixedLengthArrayMember = FixedLengthArrayMember;
 
     Object.defineProperty(exports, '__esModule', { value: true });
 
