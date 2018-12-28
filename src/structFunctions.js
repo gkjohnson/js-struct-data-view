@@ -1,7 +1,11 @@
 import { StructDefinition, ArrayMember } from './classes.js';
 import { BYTE_LENGTHS, READ_FUNCTIONS, WRITE_FUNCTIONS } from './constants.js';
 
+// The cursor to use to keep track of where the current offset is
+// for writing or reading next bytes
 const defaultCursor = { offset: 0 };
+
+// Forms a struct from the data in the buffer based on the struct definition
 function getStruct(dataView, definition, offset = 0, target = {}, cursor = defaultCursor) {
 
     cursor.offset = offset;
@@ -10,8 +14,10 @@ function getStruct(dataView, definition, offset = 0, target = {}, cursor = defau
         const member = definition[ i ];
         const { name, type, littleEndian } = member;
 
-        if (type instanceof StructDefinition) {
+        // If the type is another struct
+        if (Array.isArray(type)) {
 
+            // If it's an array type
             if (member instanceof ArrayMember) {
 
                 const length = member.getLength(dataView, cursor);
@@ -61,6 +67,7 @@ function getStruct(dataView, definition, offset = 0, target = {}, cursor = defau
 
 }
 
+// Writes a struct into the buffer based on the struct definition and value
 function setStruct(dataView, definition, offset, value, cursor = defaultCursor) {
 
     cursor.offset = offset;
@@ -115,6 +122,7 @@ function setStruct(dataView, definition, offset, value, cursor = defaultCursor) 
 
 }
 
+// Finds the offset of the next struct
 function nextStruct(dataView, definition, offset = 0) {
 
     const cursor = defaultCursor;
