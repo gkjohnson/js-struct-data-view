@@ -2,10 +2,15 @@ import { nextStruct, getStruct, setStruct } from './structFunctions.js';
 
 export class StructArray extends Proxy {
 
-    constructor(buffer, structDefinition) {
+    constructor(buffer, structDefinition, options = null) {
+
+        options = Object.assign({
+            reuseObject: false,
+        }, options);
 
         const size = nextStruct(null, structDefinition);
         const dataView = new DataView(buffer);
+        const targetObject = options.reuseObject ? {} : undefined;
 
         super(buffer, {
 
@@ -22,7 +27,7 @@ export class StructArray extends Proxy {
                     const offset = key * size;
                     if (key >= 0 && offset + size <= target.byteLength) {
 
-                        return getStruct(dataView, structDefinition, offset);
+                        return getStruct(dataView, structDefinition, offset, targetObject);
 
                     } else {
 
