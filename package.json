@@ -5,7 +5,8 @@
   "main": "index.js",
   "scripts": {
     "build": "rollup --format umd --name JsStruct --input ./src/index.js --file ./umd/index.js",
-    "test": "npm run build && jest"
+    "test": "npm run build && jest",
+    "lint": "eslint src/*.js test/*.js"
   },
   "repository": {
     "type": "git",
@@ -18,6 +19,7 @@
   },
   "homepage": "https://github.com/gkjohnson/js-struct-data-view#readme",
   "devDependencies": {
+    "eslint": "^5.11.1",
     "jest-cli": "^23.6.0",
     "rollup": "^1.0.0"
   }
