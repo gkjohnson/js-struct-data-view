@@ -14,3 +14,4 @@ Set of functions used to read and write object data to and from an ArrayBuffer. 
 - Add support for seeking through an array
 - Add example for reading and writing data of varying types of structs
 - Add benchmarks
+- Write something that will generate a `Function()` to get and set values to and from the `ArrayBuffer`
