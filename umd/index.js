@@ -17,7 +17,7 @@
             super();
 
             this.name = name;
-            this.type = type.toLowerCase();
+            this.type = typeof type === 'string' ? type.toLowerCase() : type;
             this.littleEndian = littleEndian;
 
         }
@@ -31,7 +31,7 @@
             super();
 
             this.name = name;
-            this.type = type.toLowerCase();
+            this.type = typeof type === 'string' ? type.toLowerCase() : type;
             this.littleEndian = littleEndian;
 
         }
@@ -146,7 +146,7 @@
                     for (let j = 0; j < length; j++) {
 
                         arr[j] = arr[j] || {};
-                        getStruct(dataView, type, cursor.offset, arr[j]);
+                        getStruct(dataView, type, cursor.offset, arr[j], cursor);
 
                     }
                     target[name] = arr;
@@ -154,7 +154,7 @@
                 } else {
 
                     target[name] = target[name] || {};
-                    getStruct(dataView, type, cursor.offset, target[name]);
+                    getStruct(dataView, type, cursor.offset, target[name], cursor);
 
                 }
 
@@ -211,13 +211,13 @@
                     const length = member.writeLength(dataView, cursor, memberVal);
                     for (let j = 0; j < length; j++) {
 
-                        setStruct(dataView, type, cursor.offset, memberVal[i]);
+                        setStruct(dataView, type, cursor.offset, memberVal[j], cursor);
 
                     }
 
                 } else {
 
-                    setStruct(dataView, type, cursor.offset, memberVal);
+                    setStruct(dataView, type, cursor.offset, memberVal, cursor);
 
                 }
 

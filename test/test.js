@@ -85,6 +85,41 @@ describe('Scalar Members', () => {
         expect(next).toBe(5);
     });
 
+    it('should read and write nested structs', () => {
+
+        const def = new StructDefinition(
+            new ScalarMember('a', 'uint8'),
+            new ScalarMember('b',
+                new StructDefinition(
+                    new ScalarMember('c', 'float64'),
+                )
+            ),
+        );
+
+        const data = {
+            a: 100,
+            b: {
+                c: -10.2,
+            },
+        };
+        const dataView = new DataView(new ArrayBuffer(1 + 8));
+        const cursor = { offset: 0 };
+        setStruct(dataView, def, 0, data, cursor);
+
+        expect(dataView.getUint8(0)).toBe(100);
+        expect(dataView.getFloat64(1)).toBe(-10.2);
+        expect(cursor.offset).toBe(9);
+
+        cursor.offset = 0;
+        const readData = getStruct(dataView, def, 0, {}, cursor);
+        expect(readData).toEqual(data);
+        expect(cursor.offset).toBe(9);
+
+        const next = nextStruct(dataView, def, 0);
+        expect(next).toBe(9);
+
+    });
+
 });
 
 describe('Fixed Length Array Members', () => {
@@ -144,6 +179,51 @@ describe('Fixed Length Array Members', () => {
         expect(next).toBe(5);
     });
 
+    it('should read and write an array of structs', () => {
+
+        const def = new StructDefinition(
+            new FixedLengthArrayMember(
+                'a',
+                new StructDefinition(
+                    new ScalarMember('b', 'uint32'),
+                    new FixedLengthArrayMember('c', 'float64', 2),
+                ),
+                2
+            ));
+        const data = {
+            a: [{
+                b: 10,
+                c: [1.1, 1.2],
+            }, {
+                b: 20,
+                c: [2.1, 2.2],
+            }],
+        };
+
+        const cursor = { offset: 0 };
+        const dataView = new DataView(new ArrayBuffer(2 * 4 + 4 * 8));
+
+        setStruct(dataView, def, 0, data, cursor);
+
+        expect(dataView.getUint32(0)).toBe(10);
+        expect(dataView.getFloat64(4)).toBe(1.1);
+        expect(dataView.getFloat64(12)).toBe(1.2);
+
+        expect(dataView.getUint32(20)).toBe(20);
+        expect(dataView.getFloat64(24)).toBe(2.1);
+        expect(dataView.getFloat64(32)).toBe(2.2);
+
+        expect(cursor.offset).toBe(40);
+
+        cursor.offset = 0;
+        const readData = getStruct(dataView, def, 0, {}, cursor);
+        expect(readData).toEqual(data);
+        expect(cursor.offset).toBe(40);
+
+        const next = nextStruct(dataView, def, 0);
+        expect(next).toBe(40);
+
+    });
 });
 
 describe('Variable Length Array Members', () => {

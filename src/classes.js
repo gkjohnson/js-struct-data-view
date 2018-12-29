@@ -12,7 +12,7 @@ class ScalarMember extends StructMember {
         super();
 
         this.name = name;
-        this.type = type.toLowerCase();
+        this.type = typeof type === 'string' ? type.toLowerCase() : type;
         this.littleEndian = littleEndian;
 
     }
@@ -26,7 +26,7 @@ class ArrayMember extends StructMember {
         super();
 
         this.name = name;
-        this.type = type.toLowerCase();
+        this.type = typeof type === 'string' ? type.toLowerCase() : type;
         this.littleEndian = littleEndian;
 
     }

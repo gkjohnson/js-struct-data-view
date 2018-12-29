@@ -1,4 +1,4 @@
-import { StructDefinition, ArrayMember } from './classes.js';
+import { ArrayMember } from './classes.js';
 import { BYTE_LENGTHS, READ_FUNCTIONS, WRITE_FUNCTIONS } from './constants.js';
 
 // The cursor to use to keep track of where the current offset is
@@ -29,7 +29,7 @@ function getStruct(dataView, definition, offset = 0, target = {}, cursor = defau
                 for (let j = 0; j < length; j++) {
 
                     arr[j] = arr[j] || {};
-                    getStruct(dataView, type, cursor.offset, arr[j]);
+                    getStruct(dataView, type, cursor.offset, arr[j], cursor);
 
                 }
                 target[name] = arr;
@@ -37,7 +37,7 @@ function getStruct(dataView, definition, offset = 0, target = {}, cursor = defau
             } else {
 
                 target[name] = target[name] || {};
-                getStruct(dataView, type, cursor.offset, target[name]);
+                getStruct(dataView, type, cursor.offset, target[name], cursor);
 
             }
 
@@ -94,13 +94,13 @@ function setStruct(dataView, definition, offset, value, cursor = defaultCursor) 
                 const length = member.writeLength(dataView, cursor, memberVal);
                 for (let j = 0; j < length; j++) {
 
-                    setStruct(dataView, type, cursor.offset, memberVal[i]);
+                    setStruct(dataView, type, cursor.offset, memberVal[j], cursor);
 
                 }
 
             } else {
 
-                setStruct(dataView, type, cursor.offset, memberVal);
+                setStruct(dataView, type, cursor.offset, memberVal, cursor);
 
             }
 
