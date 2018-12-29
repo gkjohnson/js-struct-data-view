@@ -1,6 +1,6 @@
 import { nextStruct, getStruct, setStruct } from './structFunctions.js';
 
-export class StructArray extends Proxy {
+class ExtendableProxyClass {
 
     constructor(buffer, structDefinition, options = null) {
 
@@ -9,10 +9,12 @@ export class StructArray extends Proxy {
         }, options);
 
         const size = nextStruct(null, structDefinition);
+        if (!isNaN(buffer)) buffer = new ArrayBuffer(buffer * size);
+
         const dataView = new DataView(buffer);
         const targetObject = options.reuseObject ? {} : undefined;
 
-        super(buffer, {
+        return new Proxy(buffer, {
 
             get(target, key) {
 
@@ -21,6 +23,10 @@ export class StructArray extends Proxy {
                 if (key === 'length') {
 
                     return target.byteLength / size;
+
+                } else if (key === 'buffer') {
+
+                    return buffer;
 
                 } else if (Number.isInteger(key)) {
 
@@ -72,6 +78,10 @@ export class StructArray extends Proxy {
 
                     return key < this.length && key >= 0;
 
+                } else if (key === 'length' || key === 'buffer') {
+
+                    return true;
+
                 } else {
 
                     return key in target;
@@ -85,3 +95,5 @@ export class StructArray extends Proxy {
     }
 
 }
+
+export default class StructArray extends ExtendableProxyClass {};

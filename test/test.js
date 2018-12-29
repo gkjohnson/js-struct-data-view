@@ -1,6 +1,6 @@
 /* global describe, it, expect */
 const {
-    getStruct, setStruct, nextStruct,
+    getStruct, setStruct, nextStruct, StructArray,
     StructDefinition, ScalarMember, FixedLengthArrayMember,
 } = require('../umd/index.js');
 
@@ -232,4 +232,65 @@ describe('Variable Length Array Members', () => {
 
 describe('Strings', () => {
     it.skip('should read and write to and from the ArrayBuffer', () => {});
+});
+
+describe('StructArray', () => {
+
+    it('should have the expected fields', () => {
+
+        const def = new StructDefinition(new ScalarMember('a', 'uint32'));
+        const buffer = new ArrayBuffer(4 * 20);
+        const sa = new StructArray(buffer, def);
+
+        expect(sa.buffer).toBe(buffer);
+        expect(sa.length).toBe(20);
+    });
+
+    it('should set and get structs', () => {
+
+        const def = new StructDefinition(new ScalarMember('a', 'uint32'));
+        const buffer = new ArrayBuffer(4 * 20);
+        const sa = new StructArray(buffer, def);
+
+        for (let i = 0; i < sa.length; i++) {
+            expect(sa[i]).toEqual({ a: 0 });
+        }
+        expect(sa[20]).toBe(undefined);
+
+        const data = { a: 200 };
+        sa[3] = data;
+        expect(sa[3].a).toBe(200);
+
+        data.a = 500;
+        expect(sa[3].a).toBe(200);
+        expect(sa[0].a).toBe(0);
+
+    });
+
+    it('should work by specifying a length', () => {
+
+        const def = new StructDefinition(new ScalarMember('a', 'uint32'));
+        const sa = new StructArray(100, def);
+        expect(sa.length).toBe(100);
+
+    });
+
+    it(`should reuse an object if 'reuseObject' is true`, () => {
+
+        const def = new StructDefinition(new ScalarMember('a', 'uint32'));
+        const sa = new StructArray(100, def, { reuseObject: true });
+
+        expect(sa[0]).toBe(sa[1]);
+
+    });
+
+    it(`should not reuse an object if 'reuseObject' is false`, () => {
+
+        const def = new StructDefinition(new ScalarMember('a', 'uint32'));
+        const sa = new StructArray(100, def, { reuseObject: false });
+
+        expect(sa[0]).not.toBe(sa[1]);
+
+    });
+
 });
