@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "build": "rollup --format umd --name JsStruct --input ./src/index.js --file ./umd/index.js",
+    "benchmark": "npm run build && node ./benchmark/index.js",
     "test": "npm run build && jest",
     "lint": "eslint src/*.js test/*.js"
   },
