@@ -2,6 +2,7 @@
 const {
     getStruct, setStruct, nextStruct, StructArray,
     StructDefinition, ScalarMember, FixedLengthArrayMember,
+    createReadStructFunction,
 } = require('../umd/index.js');
 
 describe('StructDefinition', () => {
@@ -290,6 +291,52 @@ describe('StructArray', () => {
         const sa = new StructArray(100, def, { reuseObject: false });
 
         expect(sa[0]).not.toBe(sa[1]);
+
+    });
+
+});
+
+describe('Generated Functions', () => {
+
+    it.only('should be able to read the array buffer', () => {
+
+        const def = new StructDefinition(
+            new FixedLengthArrayMember(
+                'a',
+                new StructDefinition(
+                    new ScalarMember('b', 'uint32'),
+                    new FixedLengthArrayMember('c', 'float64', 2),
+                ),
+                2
+            ),
+            new FixedLengthArrayMember(
+                'b',
+                'int32',
+                2
+            ),
+            new ScalarMember('c', 'float64'),
+        );
+
+        const data = {
+            a: [{
+                b: 256,
+                c: [1.1, 1.2],
+            }, {
+                b: 250,
+                c: [1.2, 1.4],
+            }],
+            b: [ 1, 2 ],
+            c: 100.1,
+        };
+
+        const cursor = { offset: 0 };
+        const dataView = new DataView(new ArrayBuffer(20 * 2 + 8 + 8));
+
+        setStruct(dataView, def, 0, data, cursor);
+
+        const func = createReadStructFunction(def);
+        const readData = func(dataView);
+        expect(readData).toEqual(data);
 
     });
 

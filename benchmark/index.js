@@ -1,21 +1,33 @@
 const {
     getStruct, StructArray,
     StructDefinition, ScalarMember, FixedLengthArrayMember,
+    createReadStructFunction, createReadStructFromArrayBufferFunction,
 } = require('../umd/index.js');
 
 const { runBenchmark } = require('./utils.js');
 
 const COUNT = 100000;
-const arrayBuffer = new ArrayBuffer(
-    (4 + 4 + 8 + 8 * 5) * COUNT
-);
+
 const def = new StructDefinition(
     new ScalarMember('a', 'uint32'),
     new ScalarMember('b', 'float32'),
     new ScalarMember('c', 'float64'),
     new FixedLengthArrayMember('arr', 'float64', 5),
+    new FixedLengthArrayMember('nest',
+        new StructDefinition(
+            new ScalarMember('a', 'uint32'),
+            new ScalarMember('b', 'float32'),
+        ),
+        2
+    )
 );
-const size = (4 + 4 + 8 + 8 * 5);
+const size = (4 + 4 + 8 + 8 * 5 + 8 * 2);
+const arrayBuffer = new ArrayBuffer(
+    size * COUNT
+);
+const cursor = { offset: 0 };
+const dataView = new DataView(arrayBuffer);
+
 let tot = 0; // eslint-disable-line no-unused-vars
 
 const structArray = new StructArray(arrayBuffer, def);
@@ -42,8 +54,6 @@ runBenchmark(
 
 console.log('');
 
-const cursor = { offset: 0 };
-const dataView = new DataView(arrayBuffer);
 runBenchmark(
     'DataView Helper',
     () => {
@@ -75,6 +85,70 @@ runBenchmark(
 
 console.log('');
 
+let readFunc = createReadStructFunction(def);
+runBenchmark(
+    'Generated function',
+    () => {
+        cursor.offset = 0;
+        for (let i = 0; i < COUNT; i++) {
+
+            const res = readFunc(dataView, cursor.offset, {}, cursor);
+            tot += res.a;
+
+        }
+    },
+    3000
+);
+
+runBenchmark(
+    'with Reused Target',
+    () => {
+        const tg = {};
+        cursor.offset = 0;
+        for (let i = 0; i < COUNT; i++) {
+
+            const res = readFunc(dataView, cursor.offset, tg, cursor);
+            tot += res.a;
+
+        }
+    },
+    3000
+);
+
+console.log('');
+
+readFunc = createReadStructFromArrayBufferFunction(def, arrayBuffer);
+runBenchmark(
+    'Generated Typed Array Func',
+    () => {
+        cursor.offset = 0;
+        for (let i = 0; i < COUNT; i++) {
+
+            const res = readFunc(cursor.offset, {}, cursor);
+            tot += res.a;
+
+        }
+    },
+    3000
+);
+
+runBenchmark(
+    'with Reused Target',
+    () => {
+        const tg = {};
+        cursor.offset = 0;
+        for (let i = 0; i < COUNT; i++) {
+
+            const res = readFunc(cursor.offset, tg, cursor);
+            tot += res.a;
+
+        }
+    },
+    3000
+);
+
+console.log('');
+
 runBenchmark(
     'DataView Read',
     () => {
@@ -84,6 +158,7 @@ runBenchmark(
             b: 0,
             c: 0,
             arr: [0, 0, 0, 0, 0],
+            nest: [{ a: 0, b: 0 }, { a: 0, b: 0 }],
         };
         for (let i = 0; i < COUNT; i++) {
 
@@ -96,6 +171,13 @@ runBenchmark(
                 tg.arr[j] = dataView.getFloat64(offset + 16 + j * 8);
 
                 // tg.arr[j] = float64Array[i * offset64 + 2 + j];
+
+            }
+
+            for (let j = 0; j < 2; j++) {
+
+                tg.nest[j].a = dataView.getUint32(offset + 56 + j * 8 + 0);
+                tg.nest[j].b = dataView.getFloat32(offset + 56 + j * 8 + 4);
 
             }
 
@@ -118,6 +200,7 @@ runBenchmark(
             b: 0,
             c: 0,
             arr: [0, 0, 0, 0, 0],
+            nest: [{ a: 0, b: 0 }, { a: 0, b: 0 }],
         };
         const offset32 = size / 4;
         const offset64 = size / 8;
@@ -132,6 +215,13 @@ runBenchmark(
             for (let j = 0; j < 5; j++) {
 
                 tg.arr[j] = float64Array[i * offset64 + 2 + j];
+
+            }
+
+            for (let j = 0; j < 2; j++) {
+
+                tg.nest[j].a = uint32Array[i * offset32 + 14 + j * 2];
+                tg.nest[j].b = float32Array[i * offset32 + 14 + j * 2 + 1];
 
             }
 
@@ -150,6 +240,7 @@ const objectArray = new Array(COUNT)
             b: 0,
             c: 0,
             arr: [0, 0, 0, 0, 0],
+            nest: [{ a: 0, b: 0 }, { a: 0, b: 0 }],
         };
     });
 

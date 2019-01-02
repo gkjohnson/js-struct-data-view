@@ -13,6 +13,23 @@ const BYTE_LENGTHS = {
     'float64': 8,
 };
 
+const TYPED_ARRAY_TYPES = {
+
+    'uint8': 'Uint8Array',
+    'uint16': 'Uint16Array',
+    'uint32': 'Uint32Array',
+    'uint64': 'BigUint64Array',
+
+    'int8': 'Int8Array',
+    'int16': 'Int16Array',
+    'int32': 'Int32Array',
+    'int64': 'BigInt64Array',
+
+    'float32': 'Float32Array',
+    'float64': 'Float64Array',
+
+};
+
 const READ_FUNCTIONS = {
     'uint8': 'getUint8',
     'uint16': 'getUint16',
@@ -43,4 +60,4 @@ const WRITE_FUNCTIONS = {
     'float64': 'setFloat64',
 };
 
-export { BYTE_LENGTHS, READ_FUNCTIONS, WRITE_FUNCTIONS };
+export { BYTE_LENGTHS, TYPED_ARRAY_TYPES, READ_FUNCTIONS, WRITE_FUNCTIONS };

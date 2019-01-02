@@ -25,6 +25,6 @@ module.exports.runBenchmark = function(name, func, maxTime, maxIterations = Infi
     }
     const elapsed = Date.now() - start;
 
-    console.log(`${ pad(name, 25) }: ${ parseFloat((elapsed / iterations).toFixed(6)) } ms`);
+    console.log(`${ pad(name, 35) }: ${ parseFloat((elapsed / iterations).toFixed(6)) } ms`);
 
 };
