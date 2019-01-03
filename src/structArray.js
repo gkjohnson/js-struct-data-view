@@ -1,4 +1,7 @@
-import { nextStruct, getStruct, setStruct } from './structFunctions.js';
+import { nextStruct } from './structFunctions.js';
+import {
+    createReadStructFromArrayBufferFunction, createWriteStructFromArrayBufferFunction,
+} from './generatedFunctions.js';
 
 class ExtendableProxyClass {
 
@@ -11,8 +14,9 @@ class ExtendableProxyClass {
         const size = nextStruct(null, structDefinition);
         if (!isNaN(buffer)) buffer = new ArrayBuffer(buffer * size);
 
-        const dataView = new DataView(buffer);
         const targetObject = options.reuseObject ? {} : undefined;
+        const readFunc = createReadStructFromArrayBufferFunction(structDefinition, buffer);
+        const writeFunc = createWriteStructFromArrayBufferFunction(structDefinition, buffer);
 
         return new Proxy(buffer, {
 
@@ -33,7 +37,7 @@ class ExtendableProxyClass {
                     const offset = key * size;
                     if (key >= 0 && offset + size <= target.byteLength) {
 
-                        return getStruct(dataView, structDefinition, offset, targetObject);
+                        return readFunc(offset, targetObject);
 
                     } else {
 
@@ -58,7 +62,7 @@ class ExtendableProxyClass {
                     const offset = key * size;
                     if (key >= 0 && offset + size <= target.byteLength) {
 
-                        setStruct(dataView, structDefinition, offset, value);
+                        writeFunc(offset, value);
 
                     }
 
