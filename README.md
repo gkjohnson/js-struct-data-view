@@ -134,3 +134,4 @@ console.log(structArray[0]);
 - Add support for seeking through an array
 - Add example for reading and writing data of varying types of structs
 - Add read and write functions to `StructArray` to avoid proxy overhead
+- Add method for reading _only_ the needed values so the overhead of reading all values is not incurred if only a single field is being used.
