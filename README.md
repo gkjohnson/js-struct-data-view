@@ -14,4 +14,3 @@ Exploration of approaches for read and write object data to and from an ArrayBuf
 - Add support for seeking through an array
 - Add example for reading and writing data of varying types of structs
 - Add benchmarks
-- Write a `Function()` generator to write to an array buffer
